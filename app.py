@@ -9,6 +9,7 @@ from libs.airbnb.airbnblisting import AirBnBListing
 from libs.app_helper import initialize_rank_scores
 import numpy as np
 import time
+import json
 
 DB_NAME = 'airbnb'
 SEARCH_COLL_NAME = 'search'
@@ -216,10 +217,12 @@ def search():
         listing_dict[listing]['position'] = i+1
 
     map_center = ((max_lat+min_lat)/2, (max_lng+min_lng)/2)
+    json_listings = json.dumps(listing_dict)
+    return json_listings
     # return str(checkin_test)
     # return city_text
     # return str(city['value'])
-    return render_template('search.html', sorted_listings = sorted_listings, listing_dict=listing_dict, map_center=map_center, city=city, state=state, traits=TRAITS, trait_weights=WEIGHTS, artsy_weight=artsy_weight, shopping_weight=shopping_weight, dining_weight=dining_weight, nightlife_weight=nightlife_weight)
+    # return render_template('search.html', sorted_listings = sorted_listings, listing_dict=listing_dict, map_center=map_center, city=city, state=state, traits=TRAITS, trait_weights=WEIGHTS, artsy_weight=artsy_weight, shopping_weight=shopping_weight, dining_weight=dining_weight, nightlife_weight=nightlife_weight)
     # return str(listing_dict)
     # return AIR_S.r.content    # For debugging: used to show the cached AirBnB search from MongoDB
     
