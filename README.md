@@ -25,6 +25,10 @@ Using Airbnb listing descriptions (features) + Airbnb's neighborhood guides for 
 * Click "Search Airbnb" - this scrapes Airbnb's search results & listings, predicts the traits for each listing, then scores & re-sorts the search results
 * On the search result page, you can resort by the column header. You can also change your preferences and see how that changes the search results.
 * If you hover over a listing, a pop-up appears in the map. You can click to the Airbnb page of the listing, as well as additional information about the listing's description
+* cURL usage:
+```
+curl --data "cityRadio=live&cityWriteIn=Tallahassee%2C+FL&checkinDate=2015-09-08&checkoutDate=2015-09-11&numGuests=1&artsyRadio=0.0&shoppingRadio=1.0&diningRadio=-1.0&nightlifeRadio=1.0"  http://127.0.0.1:7777/search
+```
 
 
 ## Dataset
