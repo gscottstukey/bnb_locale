@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, jsonify
 from flask import render_template
 from flask import request
 from flask.ext.cors import CORS
@@ -219,8 +219,8 @@ def search():
         listing_dict[listing]['position'] = i+1
 
     map_center = ((max_lat+min_lat)/2, (max_lng+min_lng)/2)
-    json_listings = json.dumps(listing_dict)
-    return json_listings
+    # son_listings = json.dumps(listing_dict)
+    return jsonify(listing_dict)
     # return str(checkin_test)
     # return city_text
     # return str(city['value'])
