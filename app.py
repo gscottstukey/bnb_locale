@@ -1,14 +1,17 @@
-from flask import Flask
+from flask import Flask, jsonify
 from flask import render_template
 from flask import request
+from flask.ext.cors import CORS
 from pymongo import MongoClient
 import pickle
 app = Flask(__name__)
-from libs.airbnb.airbnbsearchresult import AirBnBSearchResult 
+CORS(app)
+from libs.airbnb.airbnbsearchresult import AirBnBSearchResult
 from libs.airbnb.airbnblisting import AirBnBListing
 from libs.app_helper import initialize_rank_scores
 import numpy as np
 import time
+import json
 
 DB_NAME = 'airbnb'
 SEARCH_COLL_NAME = 'search'
@@ -53,10 +56,10 @@ WEIGHTS = [{'id':'1', 'value':-1.0, 'label':"hate"},
            {'id':'4', 'value':0.5, 'label':"like"},
            {'id':'5', 'value':1.0, 'label':"love"}]
 
-def score_function(default_score, 
-                   is_artsy, artsy_weight, 
-                   is_shopping, shopping_weight, 
-                   is_dining, dining_weight, 
+def score_function(default_score,
+                   is_artsy, artsy_weight,
+                   is_shopping, shopping_weight,
+                   is_dining, dining_weight,
                    is_nightlife, nightlife_weight):
     score_multiplier = is_artsy * artsy_weight + \
                        is_shopping * shopping_weight + \
@@ -103,17 +106,17 @@ def search():
     dining_weight = float(dining_weight_input)
     nightlife_weight_input = request.form['nightlifeRadio']
     nightlife_weight = float(nightlife_weight_input)
-    
-    
+
+
     # G SCOTT: Add checkout to params
     params = {'city':city,
               'state':state,
               'country':'United-States',
-              'checkin': checkin, 
+              'checkin': checkin,
               'checkout': checkout,
               'guests':num_guests,
               'price_max':400}
-    
+
 
     AIR_S.set_params(params)
 
@@ -130,7 +133,7 @@ def search():
             listings = AIR_S.extract_listing_ids()[:9]
 
 
-    
+
     listing_dict = {l:{'id':l} for l in listings}
     thumbnail_data = AIR_S.extract_thumbnail_data()
 
@@ -153,12 +156,12 @@ def search():
         # listing_dict[listing]['url'] = AIR_L.url
         listing_dict[listing]['default_position'] = i+1
         listing_dict[listing]['default_score'] = DEFAULT_RANK_SCORES[i]
-        
+
         listing_dict[listing]['thumbnail_img'] = thumbnail_data[listing]['thumbnail_img']
         listing_dict[listing]['blurb'] = thumbnail_data[listing]['blurb']
         listing_dict[listing]['thumbnail_price'] = thumbnail_data[listing]['thumbnail_price']
         listing_dict[listing]['listing_type'] = thumbnail_data[listing]['listing_type']
-        listing_dict[listing]['lng'] = thumbnail_data[listing]['lng']        
+        listing_dict[listing]['lng'] = thumbnail_data[listing]['lng']
         listing_dict[listing]['lat'] = thumbnail_data[listing]['lat']
 
         max_lng = max(max_lng, float(listing_dict[listing]['lng']))
@@ -179,8 +182,8 @@ def search():
                 listing_dict[listing]['is_artsy'] = DEFAULT_VAL
                 listing_dict[listing]['is_shopping'] = DEFAULT_VAL
                 listing_dict[listing]['is_dining'] = DEFAULT_VAL
-                listing_dict[listing]['is_nightlife'] = DEFAULT_VAL   
-                      
+                listing_dict[listing]['is_nightlife'] = DEFAULT_VAL
+
         elif 'description_clean' in AIR_L.d:
             description_clean = AIR_L.d['description_clean']
             vectorized_desc = TFIDF.transform([description_clean]).toarray()
@@ -201,13 +204,13 @@ def search():
                          listing_dict[listing]['is_nightlife'] * nightlife_weight
 
         listing_dict[listing]['score'] = score_function(default_score = DEFAULT_RANK_SCORES[i],
-                                                        is_artsy = listing_dict[listing]['is_artsy'], 
-                                                        artsy_weight = artsy_weight, 
-                                                        is_shopping = listing_dict[listing]['is_shopping'], 
-                                                        shopping_weight = shopping_weight, 
-                                                        is_dining = listing_dict[listing]['is_dining'], 
-                                                        dining_weight = dining_weight, 
-                                                        is_nightlife = listing_dict[listing]['is_nightlife'], 
+                                                        is_artsy = listing_dict[listing]['is_artsy'],
+                                                        artsy_weight = artsy_weight,
+                                                        is_shopping = listing_dict[listing]['is_shopping'],
+                                                        shopping_weight = shopping_weight,
+                                                        is_dining = listing_dict[listing]['is_dining'],
+                                                        dining_weight = dining_weight,
+                                                        is_nightlife = listing_dict[listing]['is_nightlife'],
                                                         nightlife_weight = nightlife_weight)
 
 
@@ -216,13 +219,15 @@ def search():
         listing_dict[listing]['position'] = i+1
 
     map_center = ((max_lat+min_lat)/2, (max_lng+min_lng)/2)
+    # son_listings = json.dumps(listing_dict)
+    return jsonify(listing_dict)
     # return str(checkin_test)
     # return city_text
     # return str(city['value'])
-    return render_template('search.html', sorted_listings = sorted_listings, listing_dict=listing_dict, map_center=map_center, city=city, state=state, traits=TRAITS, trait_weights=WEIGHTS, artsy_weight=artsy_weight, shopping_weight=shopping_weight, dining_weight=dining_weight, nightlife_weight=nightlife_weight)
+    # return render_template('search.html', sorted_listings = sorted_listings, listing_dict=listing_dict, map_center=map_center, city=city, state=state, traits=TRAITS, trait_weights=WEIGHTS, artsy_weight=artsy_weight, shopping_weight=shopping_weight, dining_weight=dining_weight, nightlife_weight=nightlife_weight)
     # return str(listing_dict)
     # return AIR_S.r.content    # For debugging: used to show the cached AirBnB search from MongoDB
-    
+
 
 @app.route('/listing/<listing_id>')
 def listing(listing_id):
